@@ -1,0 +1,41 @@
+# Déploiement standard :
+#   cp .env.example .env   (puis éditez-le)
+#   docker compose up -d --build
+#
+# L'application n'écoute que sur 127.0.0.1:3000 : placez un reverse-proxy HTTPS
+# devant (voir deploy/ et le README). Variantes prêtes à l'emploi :
+#   docker compose -f docker-compose.yml -f deploy/traefik/docker-compose.traefik.yml up -d
+#   docker compose -f docker-compose.yml -f deploy/cloudflared/docker-compose.cloudflared.yml up -d
+
+services:
+  app:
+    build: .
+    image: site-revision-prepa:latest
+    container_name: cours-prepa
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATA_DIR: /data
+      PORT: "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - cours-data:/data
+    # Durcissement du conteneur
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  cours-data:

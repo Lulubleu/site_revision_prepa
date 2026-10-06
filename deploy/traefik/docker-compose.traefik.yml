@@ -1,0 +1,43 @@
+# Surcharge Traefik v3 + Let's Encrypt automatique.
+#
+#   docker compose -f docker-compose.yml -f deploy/traefik/docker-compose.traefik.yml up -d --build
+#
+# Prérequis : un enregistrement DNS A/AAAA de DOMAIN vers le serveur, ports 80/443 ouverts.
+# Dans .env : DOMAIN=cours.exemple.fr  ACME_EMAIL=vous@exemple.fr
+#             APP_ORIGIN=https://cours.exemple.fr  TRUST_PROXY=1  COOKIE_SECURE=true
+
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL:?ACME_EMAIL manquant dans .env}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certs:/letsencrypt
+    security_opt:
+      - no-new-privileges:true
+
+  app:
+    ports: !reset []          # plus d'exposition directe : tout passe par Traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cours.rule=Host(`${DOMAIN:?DOMAIN manquant dans .env}`)
+      - traefik.http.routers.cours.entrypoints=websecure
+      - traefik.http.routers.cours.tls.certresolver=le
+      - traefik.http.services.cours.loadbalancer.server.port=3000
+
+volumes:
+  traefik-certs:

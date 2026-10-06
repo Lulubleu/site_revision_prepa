@@ -1,0 +1,38 @@
+{
+  "name": "site-revision-prepa",
+  "version": "1.0.0",
+  "description": "Organisation de cours auto-hébergée (PDF) pour la prépa TSI",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test",
+    "users": "node scripts/users.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lulubleu/site_revision_prepa.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lulubleu/site_revision_prepa/issues"
+  },
+  "homepage": "https://github.com/Lulubleu/site_revision_prepa#readme",
+  "dependencies": {
+    "argon2": "^0.45.1",
+    "better-sqlite3": "^13.0.3",
+    "content-disposition": "^1.1.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "multer": "^2.4.0",
+    "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.1"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}

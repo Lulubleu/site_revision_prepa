@@ -1,0 +1,28 @@
+# Surcharge Cloudflare Tunnel : aucun port à ouvrir sur la box / le pare-feu,
+# HTTPS assuré par Cloudflare. Idéal pour un serveur à la maison.
+#
+# 1. Tableau de bord Cloudflare → Zero Trust → Networks → Tunnels → « Create a tunnel »
+#    (type cloudflared), copiez le jeton dans .env :  TUNNEL_TOKEN=eyJ...
+# 2. Dans l'onglet « Public Hostname » du tunnel :
+#      Subdomain/Domain : cours.exemple.fr
+#      Service          : HTTP  →  app:3000
+# 3. Dans .env : APP_ORIGIN=https://cours.exemple.fr  TRUST_PROXY=1  COOKIE_SECURE=true
+# 4. docker compose -f docker-compose.yml -f deploy/cloudflared/docker-compose.cloudflared.yml up -d --build
+#
+# Note : le plan gratuit Cloudflare limite chaque requête à 100 Mo → gardez MAX_UPLOAD_MB <= 95.
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?TUNNEL_TOKEN manquant dans .env}
+    depends_on:
+      - app
+    security_opt:
+      - no-new-privileges:true
+
+  app:
+    ports: !reset []          # accessible uniquement via le tunnel
